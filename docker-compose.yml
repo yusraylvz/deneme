@@ -1,0 +1,39 @@
+version: '3'
+
+services:
+  drupal:
+    image: bitnami/drupal:latest
+    ports:
+      - 80:80
+    depends_on:
+      - db
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+      - MARIADB_HOST=db
+      - MARIADB_PORT_NUMBER=3306
+      - MARIADB_USER=${USER}
+      - MARIADB_PASSWORD=${PASSWORD}
+      - MARIADB_DATABASE=${DATABASE}
+
+  db:
+    image: bitnami/mariadb:latest
+    environment:
+      - MARIADB_USER=${USER}
+      - MARIADB_PASSWORD=${PASSWORD}
+      - MARIADB_DATABASE=${DATABASE}
+  
+  webserver:
+    image: nginx
+    ports:
+      - 80:80
+      - 443:443
+    depends_on:
+      - drupal
+
+  certificate:
+    image: certbot
+    volumes:
+      - ./certs:/etc/letsencrypt
+    depends_on:
+      - webserver
+    command: certonly --webroot --webroot-path=/etc/letsencrypt --email your_email@example.com --agree-tos --no-eff-email -d your_domain.com
